@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Grilă la Istorie - 12.10.2024</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #152472, #150794);
+            color: #333;
+        }
+
+        h2 {
+            text-align: center;
+            color: #ffffff;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .question-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .question-container.active {
+            display: block;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .question:hover {
+            transform: translateY(-5px);
+        }
+
+        .question h3 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .question input {
+            margin-right: 10px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .navigation button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .navigation button:disabled {
+            background-color: #a5d6a7;
+            cursor: not-allowed;
+        }
+
+        .navigation button:hover:not(:disabled) {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        #submit,
+        #restart {
+            display: none;
+            margin: 20px auto;
+            padding: 12px 25px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: block;
+        }
+
+        #submit:hover,
+        #restart:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        #result {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 22px;
+            padding: 15px;
+            background: #dff0d8;
+            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease;
+        }
+
+        #high-score {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+            color: #ffffff;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .explanation {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .navigation button {
+                flex: 1;
+                margin: 0 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Test Grilă la Istorie - 12.10.2024</h2>
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <div id="quiz-container">
+        <!-- Questions will be dynamically inserted here -->
+    </div>
+
+    <div class="navigation">
+        <button id="prev" disabled>Anterior</button>
+        <button id="next">Următor</button>
+    </div>
+
+    <button id="submit">Trimite</button>
+    <button id="restart" style="display: none;">Restart</button>
+    <div id="result"></div>
+    <div id="high-score"></div>
+
+    <script>
+        const answers = {
+            q1: 'A',
+            q2: 'D',
+            q3: 'B',
+            q4: 'B',
+            q5: 'C',
+            q6: 'A',
+            q7: 'C',
+            q8: 'B',
+            q9: 'B',
+            q10: 'C'
+        };
+
+        const explanations = {
+            q1: 'Perioada interbelică a durat între 1918-1939.',
+            q2: 'PRM (Partidul Revoluţionar Român) a fost fondat pe 11 noiembrie 1918.',
+            q3: 'Fondatorii blocului Antantei sunt Franța, Imperiul Rus și Anglia.',
+            q4: 'În războiul dintre Franța și Germania din 1882, a fost învinsă Franța.',
+            q5: 'În 1916, România a intrat în război de partea Antantei.',
+            q6: 'Bulgaria a intrat de partea Puterilor Centrale deoarece dorea să-și ia revanşa după cel de-al Doilea Război Balcanic.',
+            q7: 'Una dintre noile arme folosite în PRM au fost tancurile, avioanele și mitraliera.',
+            q8: 'În urma PRM și a sistemului de la Versailles (1919), a apărut statul Cehia.',
+            q9: 'În urma Tratatului de la Versailles, Franța a primit Alsacia şi Lorena de la Germania.',
+            q10: 'În noaptea de 16 spre 17 iulie 1918 a fost ucis Nicolae al II-lea.'
+        };
+
+        const questions = [
+            {
+                id: 'q1',
+                text: 'Perioada interbelică a durat între:',
+                options: {
+                    A: '1945-prezent',
+                    B: '1914-1939',
+                    C: '1939-1945',
+                    D: '1918-1939'
+                }
+            },
+            {
+                id: 'q2',
+                text: 'Pe ce dată s-a început PRM?',
+                options: {
+                    A: '28 iulie 1914',
+                    B: '28 iulie 1939',
+                    C: '1 septembrie 1914',
+                    D: '11 noiembrie 1918'
+                }
+            },
+            {
+                id: 'q3',
+                text: 'Fondatorii blocului Antantei sunt:',
+                options: {
+                    A: 'Germania, Imperiul Austro-Ungar, Italia',
+                    B: 'Franța, Imperiul Rus, Anglia',
+                    C: 'Franța, Germania, Imperiul Rus',
+                    D: 'Anglia, Germania, Imperiul Rus'
+                }
+            },
+            {
+                id: 'q4',
+                text: 'În războiul dintre Franța și Germania (1882) a fost învinsă:',
+                options: {
+                    A: 'Germania',
+                    B: 'Franța',
+                    C: 'Era găsit un compromis',
+                    D: 'Prusia'
+                }
+            },
+            {
+                id: 'q5',
+                text: 'În 1916 România:',
+                options: {
+                    A: 'Intră în război de partea Puterilor Centrale',
+                    B: 'Păstrează neutralitatea',
+                    C: 'Intră în război de partea Antantei',
+                    D: 'Intră în război de partea Triplei Alianțe'
+                }
+            },
+            {
+                id: 'q6',
+                text: 'Bulgaria a intrat de partea Puterilor Centrale deoarece:',
+                options: {
+                    A: 'Dorea să-și ia revanşa după cel de-al Doilea Război Balcanic',
+                    B: 'Dorea să obțină Transilvania',
+                    C: 'Dorea să fie de partea Imperiului Otoman',
+                    D: 'Ea nu a participat în PRM'
+                }
+            },
+            {
+                id: 'q7',
+                text: 'Una dintre noile arme folosite în PRM au fost:',
+                options: {
+                    A: 'Tunuri, avioane, pistoal PM',
+                    B: 'Pușcă de asalt AK47, grenade, tancuri',
+                    C: 'Tancurile, avioanele, mitraliera',
+                    D: 'Drone, grenade, gaze toxice'
+                }
+            },
+            {
+                id: 'q8',
+                text: 'În urma PRM și a sistemului de la Versailles (1919), a apărut statul:',
+                options: {
+                    A: 'Moldova',
+                    B: 'Cehia',
+                    C: 'România',
+                    D: 'Polonia'
+                }
+            },
+            {
+                id: 'q9',
+                text: 'În urma Tratatului de la Versailles, Franța a primit de la Germania teritoriile:',
+                options: {
+                    A: 'Eupen şi Malmedy',
+                    B: 'Alsacia şi Lorena',
+                    C: 'Regiunea Teschen',
+                    D: 'Regiunea Memel'
+                }
+            },
+            {
+                id: 'q10',
+                text: 'În timpul Revoluției Ruse din 1917 a fost ucis, în noaptea de 16 spre 17 iulie 1918:',
+                options: {
+                    A: 'Nicolae al I',
+                    B: 'Alexandru al II-lea',
+                    C: 'Nicolae al II-lea',
+                    D: 'Carol I'
+                }
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // Shuffle questions
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        const shuffledQuestions = shuffle([...questions]);
+
+        // Initialize High Score
+        let highScore = localStorage.getItem('highScore') || 0;
+        
+        // Render Questions
+        const quizContainer = document.getElementById('quiz-container');
+
+        shuffledQuestions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.classList.add('question-container');
+            if (index === 0) questionDiv.classList.add('active');
+            questionDiv.setAttribute('data-index', index);
+
+            const questionHTML = `
+                <div class="question">
+                    <h3>${index + 1}. ${q.text}</h3>
+                    ${Object.entries(q.options).map(([key, value]) => `
+                        <input type="radio" name="${q.id}" value="${key}" id="${q.id}${key}">
+                        <label for="${q.id}${key}"> ${value}</label><br>
+                    `).join('')}
+                    <div class="feedback" id="${q.id}-feedback" style="display: none;"></div>
+                    <div class="explanation" id="${q.id}-explanation" style="display: none;"></div>
+                </div>
+            `;
+            questionDiv.innerHTML = questionHTML;
+            quizContainer.appendChild(questionDiv);
+        });
+
+        const totalQuestions = shuffledQuestions.length;
+
+        // Navigation Buttons
+        const prevButton = document.getElementById('prev');
+        const nextButton = document.getElementById('next');
+
+        prevButton.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                showQuestion(currentQuestionIndex - 1);
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentQuestionIndex < totalQuestions - 1) {
+                showQuestion(currentQuestionIndex + 1);
+            }
+        });
+
+        function showQuestion(index) {
+            document.querySelectorAll('.question-container').forEach(q => q.classList.remove('active'));
+            document.querySelector(`.question-container[data-index="${index}"]`).classList.add('active');
+            currentQuestionIndex = index;
+            updateNavigationButtons();
+            updateProgressBar();
+        }
+
+        function updateNavigationButtons() {
+            prevButton.disabled = currentQuestionIndex === 0;
+            nextButton.disabled = currentQuestionIndex === totalQuestions - 1;
+        }
+
+        function updateProgressBar() {
+            const progress = document.getElementById('progress');
+            const percentage = ((currentQuestionIndex) / totalQuestions) * 100;
+            progress.style.width = percentage + '%';
+        }
+
+        // Initial update
+        updateNavigationButtons();
+        updateProgressBar();
+
+        // Submit and Restart Buttons
+        const submitButton = document.getElementById('submit');
+        const restartButton = document.getElementById('restart');
+        const resultDiv = document.getElementById('result');
+
+        submitButton.style.display = 'block';
+
+        submitButton.addEventListener('click', submitQuiz);
+        restartButton.addEventListener('click', restartQuiz);
+
+        function submitQuiz() {
+            let answeredQuestions = 0;
+            score = 0;
+
+            shuffledQuestions.forEach(q => {
+                const userAnswer = document.querySelector(`input[name="${q.id}"]:checked`);
+                const feedbackDiv = document.getElementById(`${q.id}-feedback`);
+                const explanationDiv = document.getElementById(`${q.id}-explanation`);
+                if (userAnswer) {
+                    answeredQuestions++;
+                    if (userAnswer.value === answers[q.id]) {
+                        score++;
+                        feedbackDiv.textContent = 'Corect!';
+                        feedbackDiv.classList.add('correct');
+                    } else {
+                        feedbackDiv.textContent = 'Incorect!';
+                        feedbackDiv.classList.add('incorrect');
+                    }
+                    explanationDiv.textContent = explanations[q.id];
+                    feedbackDiv.style.display = 'block';
+                    explanationDiv.style.display = 'block';
+                }
+            });
+
+            if (answeredQuestions === totalQuestions) {
+                showResult();
+            } else {
+                alert('Răspundeți la toate întrebările!');
+            }
+
+            updateProgressAfterSubmit();
+        }
+
+        function showResult() {
+            resultDiv.textContent = `Ai răspuns corect la ${score} întrebări din ${totalQuestions}.`;
+            submitButton.style.display = 'none';
+            restartButton.style.display = 'block';
+
+            // Update High Score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+                document.getElementById('high-score').innerHTML = `Scor Maxim: ${highScore} / ${questions.length}`;
+            }
+
+            // Update Progress Bar to show percentage
+            const progress = document.getElementById('progress');
+            const percentage = (score / totalQuestions) * 100;
+            progress.style.width = percentage + '%';
+            progress.style.background = percentage >= 70 ? '#4CAF50' : percentage >= 40 ? '#ff9800' : '#f44336';
+        }
+
+        function updateProgressAfterSubmit() {
+            const progress = document.getElementById('progress');
+            const answered = shuffledQuestions.filter(q => document.querySelector(`input[name="${q.id}"]:checked`)).length;
+            const percentage = (answered / totalQuestions) * 100;
+            progress.style.width = percentage + '%';
+        }
+
+        function restartQuiz() {
+            // Reset variables
+            currentQuestionIndex = 0;
+            score = 0;
+            resultDiv.textContent = '';
+            restartButton.style.display = 'none';
+            submitButton.style.display = 'block';
+            document.getElementById('high-score').innerHTML = `Scor Maxim: ${highScore} / ${questions.length}`;
+
+            // Reset feedback and explanations
+            shuffledQuestions.forEach(q => {
+                const feedbackDiv = document.getElementById(`${q.id}-feedback`);
+                const explanationDiv = document.getElementById(`${q.id}-explanation`);
+                feedbackDiv.textContent = '';
+                feedbackDiv.classList.remove('correct', 'incorrect');
+                feedbackDiv.style.display = 'none';
+                explanationDiv.textContent = '';
+                explanationDiv.style.display = 'none';
+            });
+
+            // Clear selections
+            document.querySelectorAll('input[type="radio"]').forEach(input => input.checked = false);
+
+            // Reset progress bar
+            updateProgressBar();
+
+            // Show first question
+            showQuestion(0);
+        }
+        
+    </script>
+</body>
+
+</html>
